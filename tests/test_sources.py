@@ -78,6 +78,52 @@ def test_openalex_author_search_prefers_orcid_and_source_id() -> None:
     assert "authorships.author.id:A123" in seen_filters[1]
 
 
+def test_openalex_uses_api_key_when_env_is_present() -> None:
+    seen_api_key = ""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal seen_api_key
+        seen_api_key = request.url.params["api_key"]
+        return httpx.Response(200, json={"results": []})
+
+    adapter = OpenAlexAdapter(client_for(handler), env={"OPENALEX_API_KEY": "test-key"})
+    adapter.search("paper", DateWindow(start=date(2026, 8, 24), end=date(2026, 8, 31)))
+
+    assert seen_api_key == "test-key"
+    assert adapter.auth_mode == "authenticated"
+
+
+def test_openalex_omits_api_key_when_env_is_absent() -> None:
+    seen_params = None
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal seen_params
+        seen_params = request.url.params
+        return httpx.Response(200, json={"results": []})
+
+    adapter = OpenAlexAdapter(client_for(handler), env={})
+    adapter.search("paper", DateWindow(start=date(2026, 8, 24), end=date(2026, 8, 31)))
+
+    assert "api_key" not in seen_params
+    assert adapter.auth_mode == "unauthenticated"
+
+
+def test_openalex_retries_unauthenticated_for_invalid_api_key() -> None:
+    seen_api_keys: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen_api_keys.append(request.url.params.get("api_key", ""))
+        if len(seen_api_keys) == 1:
+            return httpx.Response(403, json={"error": "bad key"})
+        return httpx.Response(200, json={"results": []})
+
+    adapter = OpenAlexAdapter(client_for(handler), env={"OPENALEX_API_KEY": "bad-key"})
+    adapter.search("paper", DateWindow(start=date(2026, 8, 24), end=date(2026, 8, 31)))
+
+    assert seen_api_keys == ["bad-key", ""]
+    assert adapter.auth_mode == "fallback_unauthenticated"
+
+
 def test_europepmc_normalization() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(

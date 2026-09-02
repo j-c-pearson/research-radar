@@ -78,6 +78,14 @@ class WatchItem(BaseModel):
         return value
 
 
+class SourceAuthConfig(BaseModel):
+    mode: str = "none"
+    api_key_env: str = ""
+    placement: str = ""
+    parameter: str = ""
+    fallback_to_unauthenticated: bool = True
+
+
 class SourceConfig(BaseModel):
     id: str
     name: str
@@ -86,6 +94,7 @@ class SourceConfig(BaseModel):
     priority: Priority = Priority.medium
     date_field_policy: str = ""
     max_results_per_query: int = 10
+    auth: SourceAuthConfig = Field(default_factory=SourceAuthConfig)
     notes: str = ""
 
 
@@ -162,6 +171,7 @@ class MatchedPaper(BaseModel):
 class SourceDiagnostic(BaseModel):
     source: str
     request_status: str
+    auth_mode: str = "unauthenticated"
     retry_count: int = 0
     rate_limit_response: str = ""
     returned_count: int = 0

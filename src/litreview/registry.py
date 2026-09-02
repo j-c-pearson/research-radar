@@ -6,7 +6,7 @@ from pathlib import Path
 import yaml
 from pydantic import ValidationError
 
-from litreview.models import Registry
+from litreview.models import Registry, SourceConfig
 
 ID_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 ORCID_RE = re.compile(r"^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$")
@@ -63,6 +63,7 @@ def validate_registry(registry: Registry) -> None:
 
     for source in registry.sources:
         _validate_id("source", source.id, errors)
+        _validate_source_auth(source, errors)
 
     for topic in registry.topics:
         _validate_id("topic", topic.id, errors)
@@ -179,3 +180,22 @@ def _check_ids(label: str, ids: list[str], errors: list[str]) -> set[str]:
 def _validate_id(label: str, item_id: str, errors: list[str]) -> None:
     if not ID_RE.match(item_id):
         errors.append(f"Invalid {label} ID {item_id!r}; use lowercase snake_case")
+
+
+def _validate_source_auth(source: SourceConfig, errors: list[str]) -> None:
+    auth = source.auth
+    if auth.mode not in {"none", "optional"}:
+        errors.append(f"Source {source.id} has invalid auth mode: {auth.mode}")
+    if auth.mode == "none":
+        return
+    if source.id != "openalex":
+        errors.append(
+            f"Source {source.id} defines optional auth, but only OpenAlex auth "
+            "is supported in v1"
+        )
+    if not auth.api_key_env:
+        errors.append(f"Source {source.id} optional auth requires api_key_env")
+    if auth.placement != "query":
+        errors.append(f"Source {source.id} optional auth placement must be query in v1")
+    if not auth.parameter:
+        errors.append(f"Source {source.id} optional auth requires parameter")

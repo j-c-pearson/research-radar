@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import httpx
+
 from litreview.models import DateWindow, PaperRecord
 from litreview.sources.base import SourceAdapter, parse_date
 
@@ -10,18 +12,26 @@ class OpenAlexAdapter(SourceAdapter):
     source_id = "openalex"
     api_url = "https://api.openalex.org/works"
 
+    def auth_query_params(self) -> dict[str, str]:
+        if self.source_config is None:
+            key = self.env.get("OPENALEX_API_KEY", "").strip()
+            if key:
+                self.auth_mode = "authenticated"
+                return {"api_key": key}
+            self.auth_mode = "unauthenticated"
+            return {}
+        return super().auth_query_params()
+
     def search(
         self, query: str, window: DateWindow, max_results: int = 10
     ) -> list[PaperRecord]:
-        response = self.client.get(
-            self.api_url,
-            params={
+        response = self._get(
+            {
                 "search": query,
                 "filter": _date_filter(window),
                 "per-page": max_results,
-            },
+            }
         )
-        response.raise_for_status()
         return [
             record
             for item in response.json().get("results", [])
@@ -37,19 +47,42 @@ class OpenAlexAdapter(SourceAdapter):
         orcid: str = "",
     ) -> list[PaperRecord]:
         author_filter = _author_filter(author=author, source_id=source_id, orcid=orcid)
-        response = self.client.get(
-            self.api_url,
-            params={
+        response = self._get(
+            {
                 "filter": f"{author_filter},{_date_filter(window)}",
                 "per-page": max_results,
-            },
+            }
         )
-        response.raise_for_status()
         return [
             record
             for item in response.json().get("results", [])
             if (record := self._normalize(item))
         ]
+
+    def _get(self, params: dict[str, object]) -> httpx.Response:
+        auth_params = self.auth_query_params()
+        response = self.client.get(self.api_url, params={**params, **auth_params})
+        try:
+            response.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            if self._should_retry_unauthenticated(exc, auth_params):
+                self.auth_mode = "fallback_unauthenticated"
+                response = self.client.get(self.api_url, params=params)
+                response.raise_for_status()
+                return response
+            raise
+        return response
+
+    def _should_retry_unauthenticated(
+        self, exc: httpx.HTTPStatusError, auth_params: dict[str, str]
+    ) -> bool:
+        if not auth_params:
+            return False
+        if exc.response.status_code not in {401, 403}:
+            return False
+        if self.source_config is None:
+            return True
+        return self.source_config.auth.fallback_to_unauthenticated
 
     def _normalize(self, item: dict[str, Any]) -> PaperRecord | None:
         publication_date = parse_date(item.get("publication_date"))

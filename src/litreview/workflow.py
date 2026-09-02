@@ -87,7 +87,7 @@ def collect_records(
     ]
 
     for source_config in enabled_sources:
-        adapter = ADAPTERS[source_config.id](client=client)
+        adapter = ADAPTERS[source_config.id](client=client, source_config=source_config)
         returned_count = 0
         errors: list[str] = []
         retained_by_source = 0
@@ -146,6 +146,7 @@ def collect_records(
                 SourceDiagnostic(
                     source=source_config.id,
                     request_status="failed" if errors else "ok",
+                    auth_mode=adapter.auth_mode,
                     retry_count=0,
                     rate_limit_response="",
                     returned_count=returned_count,

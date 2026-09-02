@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 
 import feedparser
 
-from litreview.models import DateWindow, PaperRecord
+from litreview.models import DateWindow, PaperRecord, SourceConfig
 from litreview.sources.base import SourceAdapter, parse_date
 
 ARXIV_MIN_REQUEST_INTERVAL_SECONDS = 3.0
@@ -18,11 +18,13 @@ class ArxivAdapter(SourceAdapter):
     def __init__(
         self,
         client=None,
+        source_config: SourceConfig | None = None,
+        env: Mapping[str, str] | None = None,
         min_request_interval_seconds: float = ARXIV_MIN_REQUEST_INTERVAL_SECONDS,
         clock: Callable[[], float] = time.monotonic,
         sleeper: Callable[[float], None] = time.sleep,
     ) -> None:
-        super().__init__(client=client)
+        super().__init__(client=client, source_config=source_config, env=env)
         self.min_request_interval_seconds = min_request_interval_seconds
         self._clock = clock
         self._sleep = sleeper

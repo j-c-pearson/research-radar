@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
-from litreview.models import DateWindow, PaperRecord
+from litreview.models import DateWindow, PaperRecord, SourceConfig
 from litreview.sources.base import SourceAdapter, parse_date
 
 
@@ -11,8 +12,13 @@ class _RxivAdapter(SourceAdapter):
     source_id = "biorxiv"
     _window_cache: dict[tuple[str, str], list[PaperRecord]]
 
-    def __init__(self, client=None) -> None:
-        super().__init__(client=client)
+    def __init__(
+        self,
+        client=None,
+        source_config: SourceConfig | None = None,
+        env: Mapping[str, str] | None = None,
+    ) -> None:
+        super().__init__(client=client, source_config=source_config, env=env)
         self._window_cache = {}
 
     @property

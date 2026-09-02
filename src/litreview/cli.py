@@ -12,6 +12,7 @@ from litreview.dates import (
     initial_last_run_date,
     parse_date,
 )
+from litreview.env import load_local_env
 from litreview.launchd import launchd_plist
 from litreview.registry import (
     RegistryValidationError,
@@ -56,6 +57,7 @@ def run(
         Path, typer.Option("--reports-dir", help="Directory for Markdown reports.")
     ] = Path("reports"),
 ) -> None:
+    load_local_env()
     registry = _load_or_exit(registry_path)
     state = StateStore(state_path)
     try:
@@ -101,6 +103,7 @@ def scheduled_run(
         Path, typer.Option("--reports-dir", help="Directory for Markdown reports.")
     ] = Path("reports"),
 ) -> None:
+    load_local_env()
     now = datetime.now(tz=LONDON_TZ)
     if now.weekday() != 4 or now.hour != 8:
         typer.echo(f"Not due: London time is {now.isoformat(timespec='minutes')}")
@@ -128,6 +131,7 @@ def test(
         Path, typer.Option("--registry", help="Path to registry.yaml.")
     ] = Path("registry.yaml"),
 ) -> None:
+    load_local_env()
     registry = _load_or_exit(registry_path)
     window = default_window(initial_last_run_date(), now=None)
     matched, diagnostics = collect_records(registry, window)

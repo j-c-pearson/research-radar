@@ -88,6 +88,7 @@ def render_report(
                 f"### {diagnostic.source}",
                 "",
                 f"- Request status: {diagnostic.request_status}",
+                f"- Auth mode: {diagnostic.auth_mode}",
                 f"- Retry count: {diagnostic.retry_count}",
                 f"- Rate-limit response: {diagnostic.rate_limit_response}",
                 f"- Records returned: {diagnostic.returned_count}",
