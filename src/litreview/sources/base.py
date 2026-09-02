@@ -22,7 +22,9 @@ class SourceAdapter:
     def __init__(self, client: httpx.Client | None = None) -> None:
         self.client = client or httpx.Client(timeout=10.0, follow_redirects=True)
 
-    def search(self, query: str, window: DateWindow, max_results: int = 10) -> list[PaperRecord]:
+    def search(
+        self, query: str, window: DateWindow, max_results: int = 10
+    ) -> list[PaperRecord]:
         raise NotImplementedError
 
     def search_author(

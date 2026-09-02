@@ -1,0 +1,22 @@
+# .editorconfig
+
+# Mark this as the top-level config (stop searching parent dirs)
+root = true
+
+# Rules for all files
+[*]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.py]
+max_line_length = 88 # Also enforced by Ruff, specified here for editor support
+
+[*.{yml,yaml}]
+indent_size = 2

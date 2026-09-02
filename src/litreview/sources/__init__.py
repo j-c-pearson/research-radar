@@ -10,4 +10,3 @@ __all__ = [
     "MedrxivAdapter",
     "OpenAlexAdapter",
 ]
-

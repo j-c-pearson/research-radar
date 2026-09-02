@@ -60,7 +60,9 @@ class StateStore:
         self.conn.commit()
 
     def get_last_run_date(self, today_now=None) -> date:
-        row = self.conn.execute("SELECT value FROM metadata WHERE key = 'last_run_date'").fetchone()
+        row = self.conn.execute(
+            "SELECT value FROM metadata WHERE key = 'last_run_date'"
+        ).fetchone()
         if row:
             return date.fromisoformat(row["value"])
         value = initial_last_run_date(today_now)
@@ -123,7 +125,9 @@ class StateStore:
         for paper in papers:
             self.conn.execute(
                 """
-                INSERT INTO records(run_id, source, source_id, doi, preprint_id, title, payload)
+                INSERT INTO records(
+                    run_id, source, source_id, doi, preprint_id, title, payload
+                )
                 VALUES(?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
@@ -145,10 +149,14 @@ class StateStore:
         return run_id
 
     def snapshot(self) -> dict:
-        runs = [dict(row) for row in self.conn.execute("SELECT * FROM runs ORDER BY id")]
-        metadata = [dict(row) for row in self.conn.execute("SELECT * FROM metadata ORDER BY key")]
+        runs = [
+            dict(row) for row in self.conn.execute("SELECT * FROM runs ORDER BY id")
+        ]
+        metadata = [
+            dict(row)
+            for row in self.conn.execute("SELECT * FROM metadata ORDER BY key")
+        ]
         return {"metadata": metadata, "runs": runs}
 
     def dump_json(self) -> str:
         return json.dumps(self.snapshot(), indent=2)
-

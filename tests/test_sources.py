@@ -5,7 +5,12 @@ from datetime import date
 import httpx
 
 from litreview.models import DateWindow
-from litreview.sources import ArxivAdapter, BiorxivAdapter, EuropePmcAdapter, OpenAlexAdapter
+from litreview.sources import (
+    ArxivAdapter,
+    BiorxivAdapter,
+    EuropePmcAdapter,
+    OpenAlexAdapter,
+)
 
 
 def client_for(handler) -> httpx.Client:

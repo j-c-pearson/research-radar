@@ -8,7 +8,7 @@ import pytest
 from litreview.models import DateWindow
 from litreview.registry import load_registry
 from litreview.state import StateStore
-from litreview.workflow import RunSkipped, run_review
+from litreview.workflow import RunSkippedError, run_review
 
 
 def test_initial_last_run_is_seven_days_before(tmp_path: Path) -> None:
@@ -31,7 +31,7 @@ def test_duplicate_window_skip_and_overwrite(tmp_path: Path) -> None:
         path = run_review(registry, window, state, reports_dir=reports, client=None, update_last_run=False)
         original = path.read_text()
 
-        with pytest.raises(RunSkipped):
+        with pytest.raises(RunSkippedError):
             run_review(registry, window, state, reports_dir=reports, client=None, update_last_run=False)
 
         path.write_text("old")

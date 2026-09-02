@@ -9,12 +9,23 @@ TRAILING_PUNCTUATION = ".,;:!?)]}'\""
 
 
 def normalize_doi(doi: str) -> str:
-    return doi.strip().removeprefix("https://doi.org/").removeprefix("http://doi.org/").lower()
+    return (
+        doi.strip()
+        .removeprefix("https://doi.org/")
+        .removeprefix("http://doi.org/")
+        .lower()
+    )
 
 
 def clean_title(title: str) -> str:
     value = unicodedata.normalize("NFKC", title).lower().strip()
-    value = value.replace("–", "-").replace("—", "-").replace("’", "'").replace("“", '"').replace("”", '"')
+    value = (
+        value.replace("–", "-")
+        .replace("—", "-")
+        .replace("’", "'")
+        .replace("“", '"')
+        .replace("”", '"')
+    )
     value = re.sub(r"\s+", " ", value)
     return value.rstrip(TRAILING_PUNCTUATION).strip()
 
@@ -52,13 +63,20 @@ def _identifier_key(paper: MatchedPaper) -> tuple[str, str] | None:
 
 
 def _merge(existing: MatchedPaper, duplicate: MatchedPaper) -> None:
-    existing.sources = sorted(set([*existing.sources, duplicate.record.source, *duplicate.sources]))
-    existing.duplicate_record_ids.append(f"{duplicate.record.source}:{duplicate.record.source_id}")
+    existing.sources = sorted(
+        {*existing.sources, duplicate.record.source, *duplicate.sources}
+    )
+    existing.duplicate_record_ids.append(
+        f"{duplicate.record.source}:{duplicate.record.source_id}"
+    )
     existing.match.matched_topic_ids = sorted(
-        set([*existing.match.matched_topic_ids, *duplicate.match.matched_topic_ids])
+        {*existing.match.matched_topic_ids, *duplicate.match.matched_topic_ids}
     )
     existing.match.matched_watch_item_ids = sorted(
-        set([*existing.match.matched_watch_item_ids, *duplicate.match.matched_watch_item_ids])
+        {
+            *existing.match.matched_watch_item_ids,
+            *duplicate.match.matched_watch_item_ids,
+        }
     )
     if not existing.record.abstract and duplicate.record.abstract:
         existing.record.abstract = duplicate.record.abstract

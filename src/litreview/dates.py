@@ -26,4 +26,3 @@ def default_window(last_run: date, now: datetime | None = None) -> DateWindow:
 
 def parse_date(value: str) -> date:
     return date.fromisoformat(value)
-

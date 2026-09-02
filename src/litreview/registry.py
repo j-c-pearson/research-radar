@@ -42,8 +42,12 @@ def load_registry(path: Path = Path("registry.yaml")) -> Registry:
 def validate_registry(registry: Registry) -> None:
     errors: list[str] = []
 
-    category_ids = _check_ids("category", [category.id for category in registry.categories], errors)
-    source_ids = _check_ids("source", [source.id for source in registry.sources], errors)
+    category_ids = _check_ids(
+        "category", [category.id for category in registry.categories], errors
+    )
+    source_ids = _check_ids(
+        "source", [source.id for source in registry.sources], errors
+    )
     topic_ids = _check_ids("topic", [topic.id for topic in registry.topics], errors)
     _check_ids("watch item", [item.id for item in registry.watchlist], errors)
 
@@ -63,17 +67,25 @@ def validate_registry(registry: Registry) -> None:
     for topic in registry.topics:
         _validate_id("topic", topic.id, errors)
         if topic.category not in category_ids:
-            errors.append(f"Topic {topic.id} references unknown category: {topic.category}")
-        elif topic.subcategory not in subcategory_ids_by_category.get(topic.category, set()):
+            errors.append(
+                f"Topic {topic.id} references unknown category: {topic.category}"
+            )
+        elif topic.subcategory not in subcategory_ids_by_category.get(
+            topic.category, set()
+        ):
             errors.append(
                 f"Topic {topic.id} references unknown subcategory {topic.subcategory} "
                 f"for category {topic.category}"
             )
         for source_id in [*topic.sources.include, *topic.sources.exclude]:
             if source_id not in source_ids:
-                errors.append(f"Topic {topic.id} references unknown source: {source_id}")
+                errors.append(
+                    f"Topic {topic.id} references unknown source: {source_id}"
+                )
         if not topic.query_terms:
-            errors.append(f"Topic {topic.id} must define at least one search term or synonym")
+            errors.append(
+                f"Topic {topic.id} must define at least one search term or synonym"
+            )
 
     for item in registry.watchlist:
         _validate_id("watch item", item.id, errors)
@@ -83,10 +95,14 @@ def validate_registry(registry: Registry) -> None:
             errors.append(f"Watch item {item.id} has malformed ORCID: {item.orcid}")
         for topic_id in item.related_topics:
             if topic_id not in topic_ids:
-                errors.append(f"Watch item {item.id} references unknown topic: {topic_id}")
+                errors.append(
+                    f"Watch item {item.id} references unknown topic: {topic_id}"
+                )
         for source_id in item.source_ids:
             if source_id not in source_ids:
-                errors.append(f"Watch item {item.id} has unknown source ID key: {source_id}")
+                errors.append(
+                    f"Watch item {item.id} has unknown source ID key: {source_id}"
+                )
 
     label_keys = set(registry.relevance_rules.labels)
     if label_keys != {"high", "medium", "low"}:
@@ -163,4 +179,3 @@ def _check_ids(label: str, ids: list[str], errors: list[str]) -> set[str]:
 def _validate_id(label: str, item_id: str, errors: list[str]) -> None:
     if not ID_RE.match(item_id):
         errors.append(f"Invalid {label} ID {item_id!r}; use lowercase snake_case")
-

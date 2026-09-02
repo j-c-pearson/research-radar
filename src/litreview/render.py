@@ -28,11 +28,18 @@ def render_report(
     }
     grouped: dict[tuple[str, str, str], list[MatchedPaper]] = defaultdict(list)
     for paper in papers:
-        relevance = paper.match.relevance_label.value if paper.match.relevance_label else "low"
-        grouped[(relevance, paper.match.category, paper.match.subcategory)].append(paper)
+        relevance = (
+            paper.match.relevance_label.value if paper.match.relevance_label else "low"
+        )
+        grouped[(relevance, paper.match.category, paper.match.subcategory)].append(
+            paper
+        )
 
     lines = [
-        f"# Weekly Literature Report: {window.start.isoformat()} to {window.end.isoformat()}",
+        (
+            "# Weekly Literature Report: "
+            f"{window.start.isoformat()} to {window.end.isoformat()}"
+        ),
         "",
         f"Included items: {len(papers)}",
         "",
@@ -48,10 +55,18 @@ def render_report(
             continue
         lines.extend([f"## {RELEVANCE_HEADINGS[relevance]}", ""])
         for (category_id, subcategory_id), items in sorted(relevance_groups.items()):
-            category = category_names.get(category_id, category_id or "Watched authors / no topic")
-            subcategory = subcategory_names.get((category_id, subcategory_id), subcategory_id or "Unclassified")
+            category = category_names.get(
+                category_id, category_id or "Watched authors / no topic"
+            )
+            subcategory = subcategory_names.get(
+                (category_id, subcategory_id), subcategory_id or "Unclassified"
+            )
             lines.extend([f"### {category}", "", f"#### {subcategory}", ""])
-            for paper in sorted(items, key=lambda item: item.record.publication_or_posting_date, reverse=True):
+            for paper in sorted(
+                items,
+                key=lambda item: item.record.publication_or_posting_date,
+                reverse=True,
+            ):
                 lines.extend(_render_item(paper))
 
     watched = [paper for paper in papers if paper.match.matched_watch_item_ids]
@@ -59,7 +74,10 @@ def render_report(
         lines.extend(["## Watched Authors/PIs", ""])
         watch_names = {item.id: item.name for item in registry.watchlist}
         for paper in watched:
-            names = [watch_names.get(item_id, item_id) for item_id in paper.match.matched_watch_item_ids]
+            names = [
+                watch_names.get(item_id, item_id)
+                for item_id in paper.match.matched_watch_item_ids
+            ]
             lines.append(f"- {paper.record.title} ({', '.join(names)})")
         lines.append("")
 
@@ -74,7 +92,10 @@ def render_report(
                 f"- Rate-limit response: {diagnostic.rate_limit_response}",
                 f"- Records returned: {diagnostic.returned_count}",
                 f"- Records retained after date filtering: {diagnostic.retained_count}",
-                f"- Records included after relevance labeling: {diagnostic.included_count}",
+                (
+                    "- Records included after relevance labeling: "
+                    f"{diagnostic.included_count}"
+                ),
             ]
         )
         if diagnostic.errors:
@@ -99,7 +120,10 @@ def _render_item(paper: MatchedPaper) -> list[str]:
         f"##### {record.title}",
         "",
         f"- Authors: {_authors(record)}",
-        f"- Published/available online: {record.publication_or_posting_date.isoformat()}",
+        (
+            "- Published/available online: "
+            f"{record.publication_or_posting_date.isoformat()}"
+        ),
         f"- Source: {', '.join(paper.sources or [record.source])}",
     ]
     if doi:
@@ -113,8 +137,11 @@ def _render_item(paper: MatchedPaper) -> list[str]:
         lines.append(f"- Abstract: {record.abstract}")
     lines.extend(
         [
-            f"- Category and subcategory: {paper.match.category} / {paper.match.subcategory}",
-            f"- Relevance label: {paper.match.relevance_label.value if paper.match.relevance_label else ''}",
+            (
+                "- Category and subcategory: "
+                f"{paper.match.category} / {paper.match.subcategory}"
+            ),
+            f"- Relevance label: {_relevance_label(paper)}",
             "- Citation metadata:",
             "",
             "```bibtex",
@@ -130,8 +157,17 @@ def _authors(record) -> str:
     return ", ".join(record.authors) if record.authors else "Unknown authors"
 
 
+def _relevance_label(paper: MatchedPaper) -> str:
+    return paper.match.relevance_label.value if paper.match.relevance_label else ""
+
+
 def _bibtex(record) -> str:
-    entry_type = "misc" if record.raw_type == "preprint" or record.venue.lower() in {"arxiv", "biorxiv", "medrxiv"} else "article"
+    entry_type = (
+        "misc"
+        if record.raw_type == "preprint"
+        or record.venue.lower() in {"arxiv", "biorxiv", "medrxiv"}
+        else "article"
+    )
     fields = [
         ("title", record.title),
         ("author", " and ".join(record.authors)),
@@ -142,16 +178,33 @@ def _bibtex(record) -> str:
         ("doi", record.doi),
         ("url", record.url),
     ]
-    rendered_fields = [f"  {name} = {{{_escape_bibtex(value)}}}" for name, value in fields if value]
-    return f"@{entry_type}{{{_bibtex_key(record)},\n" + ",\n".join(rendered_fields) + "\n}"
+    rendered_fields = [
+        f"  {name} = {{{_escape_bibtex(value)}}}" for name, value in fields if value
+    ]
+    return (
+        f"@{entry_type}{{{_bibtex_key(record)},\n" + ",\n".join(rendered_fields) + "\n}"
+    )
 
 
 def _bibtex_key(record) -> str:
     first_author = record.authors[0] if record.authors else "unknown"
-    surname = re.sub(r"[^A-Za-z0-9]+", "", first_author.split()[-1]).lower() or "unknown"
-    title_word = next((re.sub(r"[^A-Za-z0-9]+", "", word).lower() for word in record.title.split() if word), "paper")
-    return f"{surname}{record.year or record.publication_or_posting_date.year}{title_word}"
+    surname = (
+        re.sub(r"[^A-Za-z0-9]+", "", first_author.split()[-1]).lower() or "unknown"
+    )
+    title_word = next(
+        (
+            re.sub(r"[^A-Za-z0-9]+", "", word).lower()
+            for word in record.title.split()
+            if word
+        ),
+        "paper",
+    )
+    return (
+        f"{surname}{record.year or record.publication_or_posting_date.year}{title_word}"
+    )
 
 
 def _escape_bibtex(value: str) -> str:
-    return value.replace("\\", "\\textbackslash{}").replace("{", "\\{").replace("}", "\\}")
+    return (
+        value.replace("\\", "\\textbackslash{}").replace("{", "\\{").replace("}", "\\}")
+    )

@@ -2,7 +2,15 @@ from __future__ import annotations
 
 import re
 
-from litreview.models import MatchInfo, MatchedPaper, PaperRecord, Priority, Registry, RelevanceLabel, Topic
+from litreview.models import (
+    MatchedPaper,
+    MatchInfo,
+    PaperRecord,
+    Priority,
+    Registry,
+    RelevanceLabel,
+    Topic,
+)
 
 PRIORITY_RANK = {Priority.high: 0, Priority.medium: 1, Priority.low: 2}
 
@@ -74,7 +82,10 @@ def _primary_topic(topic_ids: set[str], registry: Registry) -> Topic | None:
     topics = [topic for topic in registry.topics if topic.id in topic_ids]
     if not topics:
         return None
-    return sorted(topics, key=lambda topic: (PRIORITY_RANK[topic.priority], registry.topics.index(topic)))[0]
+    return sorted(
+        topics,
+        key=lambda topic: (PRIORITY_RANK[topic.priority], registry.topics.index(topic)),
+    )[0]
 
 
 def _contains_term(text: str, term: str) -> bool:

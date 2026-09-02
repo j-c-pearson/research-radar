@@ -19,9 +19,15 @@ class _RxivAdapter(SourceAdapter):
     def api_url(self) -> str:  # type: ignore[override]
         return f"https://api.biorxiv.org/details/{self.server}"
 
-    def search(self, query: str, window: DateWindow, max_results: int = 10) -> list[PaperRecord]:
+    def search(
+        self, query: str, window: DateWindow, max_results: int = 10
+    ) -> list[PaperRecord]:
         records = self._date_window_records(window)
-        return [record for record in records if query.lower() in f"{record.title} {record.abstract}".lower()][:max_results]
+        return [
+            record
+            for record in records
+            if query.lower() in f"{record.title} {record.abstract}".lower()
+        ][:max_results]
 
     def search_author(
         self,
@@ -32,15 +38,25 @@ class _RxivAdapter(SourceAdapter):
         orcid: str = "",
     ) -> list[PaperRecord]:
         records = self._date_window_records(window)
-        return [record for record in records if author.lower() in " ".join(record.authors).lower()][:max_results]
+        return [
+            record
+            for record in records
+            if author.lower() in " ".join(record.authors).lower()
+        ][:max_results]
 
     def _date_window_records(self, window: DateWindow) -> list[PaperRecord]:
         key = (window.start.isoformat(), window.end.isoformat())
         if key in self._window_cache:
             return self._window_cache[key]
-        response = self.client.get(f"{self.api_url}/{window.start.isoformat()}/{window.end.isoformat()}")
+        response = self.client.get(
+            f"{self.api_url}/{window.start.isoformat()}/{window.end.isoformat()}"
+        )
         response.raise_for_status()
-        records = [record for item in response.json().get("collection", []) if (record := self._normalize(item))]
+        records = [
+            record
+            for item in response.json().get("collection", [])
+            if (record := self._normalize(item))
+        ]
         self._window_cache[key] = records
         return records
 
@@ -81,4 +97,8 @@ class MedrxivAdapter(_RxivAdapter):
 
 
 def _split_authors(value: str) -> list[str]:
-    return [author.strip() for author in value.replace(";", ",").split(",") if author.strip()]
+    return [
+        author.strip()
+        for author in value.replace(";", ",").split(",")
+        if author.strip()
+    ]

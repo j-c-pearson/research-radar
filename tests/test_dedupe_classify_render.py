@@ -5,7 +5,7 @@ from pathlib import Path
 
 from litreview.classify import classify_record
 from litreview.dedupe import clean_title, dedupe_papers
-from litreview.models import DateWindow, MatchedPaper, PaperRecord, SourceDiagnostic
+from litreview.models import DateWindow, PaperRecord, SourceDiagnostic
 from litreview.registry import load_registry
 from litreview.render import render_report
 
