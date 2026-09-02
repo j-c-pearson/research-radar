@@ -1,18 +1,37 @@
 from __future__ import annotations
 
+import time
+from collections.abc import Callable
+
 import feedparser
 
 from litreview.models import DateWindow, PaperRecord
 from litreview.sources.base import SourceAdapter, parse_date
+
+ARXIV_MIN_REQUEST_INTERVAL_SECONDS = 3.0
 
 
 class ArxivAdapter(SourceAdapter):
     source_id = "arxiv"
     api_url = "https://export.arxiv.org/api/query"
 
+    def __init__(
+        self,
+        client=None,
+        min_request_interval_seconds: float = ARXIV_MIN_REQUEST_INTERVAL_SECONDS,
+        clock: Callable[[], float] = time.monotonic,
+        sleeper: Callable[[float], None] = time.sleep,
+    ) -> None:
+        super().__init__(client=client)
+        self.min_request_interval_seconds = min_request_interval_seconds
+        self._clock = clock
+        self._sleep = sleeper
+        self._last_request_at: float | None = None
+
     def search(
         self, query: str, window: DateWindow, max_results: int = 10
     ) -> list[PaperRecord]:
+        self._throttle()
         response = self.client.get(
             self.api_url,
             params={
@@ -38,6 +57,7 @@ class ArxivAdapter(SourceAdapter):
         source_id: str = "",
         orcid: str = "",
     ) -> list[PaperRecord]:
+        self._throttle()
         response = self.client.get(
             self.api_url,
             params={
@@ -78,3 +98,13 @@ class ArxivAdapter(SourceAdapter):
             raw_type="preprint",
             preprint_id=arxiv_id.rsplit("/", 1)[-1],
         )
+
+    def _throttle(self) -> None:
+        now = self._clock()
+        if self._last_request_at is not None:
+            elapsed = now - self._last_request_at
+            wait_time = self.min_request_interval_seconds - elapsed
+            if wait_time > 0:
+                self._sleep(wait_time)
+                now = self._clock()
+        self._last_request_at = now

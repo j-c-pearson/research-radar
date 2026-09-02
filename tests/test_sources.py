@@ -150,3 +150,28 @@ def test_arxiv_normalization() -> None:
 
     assert records[0].source == "arxiv"
     assert records[0].preprint_id == "2608.12345v1"
+
+
+def test_arxiv_throttles_between_requests() -> None:
+    calls = 0
+    sleeps: list[float] = []
+    clock_values = iter([10.0, 11.0, 14.0])
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        return httpx.Response(200, text="<feed></feed>")
+
+    adapter = ArxivAdapter(
+        client_for(handler),
+        min_request_interval_seconds=3.0,
+        clock=lambda: next(clock_values),
+        sleeper=sleeps.append,
+    )
+    window = DateWindow(start=date(2026, 8, 24), end=date(2026, 8, 31))
+
+    adapter.search("state estimation", window)
+    adapter.search_author("Steve Brunton", window)
+
+    assert calls == 2
+    assert sleeps == [2.0]
