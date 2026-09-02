@@ -199,7 +199,7 @@ def install_launchd(
     ] = Path("."),
     label: Annotated[
         str, typer.Option("--label", help="launchd label.")
-    ] = "com.local.paper-alert-bot",
+    ] = "com.local.research-radar",
 ) -> None:
     resolved_project_dir = (
         Path.cwd() if str(project_dir) == "." else project_dir

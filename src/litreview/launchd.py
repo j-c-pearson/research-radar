@@ -4,7 +4,7 @@ from pathlib import Path
 from xml.sax.saxutils import escape
 
 
-def launchd_plist(project_dir: Path, label: str = "com.local.paper-alert-bot") -> str:
+def launchd_plist(project_dir: Path, label: str = "com.local.research-radar") -> str:
     uv_path = _uv_path()
     stdout = project_dir / "logs" / "litreview.out.log"
     stderr = project_dir / "logs" / "litreview.err.log"

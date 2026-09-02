@@ -1,4 +1,4 @@
-# Paper Alert Bot
+# research-radar
 
 Weekly literature alerts for a configured research scope.
 
@@ -6,7 +6,11 @@ Weekly literature alerts for a configured research scope.
 
 ```bash
 uv sync --extra dev
+cp registry.example.yaml registry.yaml
 ```
+
+Edit `registry.yaml` to define the topics, authors, and sources you want to
+track. `registry.example.yaml` is a neutral template for public use.
 
 ## Common commands
 

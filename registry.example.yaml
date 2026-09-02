@@ -1,0 +1,134 @@
+version: 1
+
+metadata:
+  name: example-literature-alerts
+  description: Example search registry for weekly literature alerts.
+
+categories:
+  - id: machine_learning
+    name: Machine learning
+    notes: Example topics around machine-learning methods and applications.
+    subcategories:
+      - id: representation_learning
+        name: Representation learning
+        notes: ""
+      - id: scientific_ml
+        name: Scientific machine learning
+        notes: ""
+  - id: computational_biology
+    name: Computational biology
+    notes: Example topics around computational analysis of biological systems.
+    subcategories:
+      - id: genomics
+        name: Genomics
+        notes: ""
+
+topics:
+  - id: self_supervised_learning
+    name: Self-supervised learning
+    category: machine_learning
+    subcategory: representation_learning
+    priority: medium
+    search_terms: ["self-supervised learning"]
+    synonyms: ["contrastive learning", "masked autoencoder"]
+    include_when:
+      - The work develops or applies self-supervised representation learning.
+    exclude_when: []
+    notes: ""
+    sources: {include: [], exclude: []}
+  - id: neural_operators
+    name: Neural operators
+    category: machine_learning
+    subcategory: scientific_ml
+    priority: medium
+    search_terms: ["neural operator"]
+    synonyms: ["Fourier neural operator", "operator learning"]
+    include_when:
+      - The work develops or applies neural operators for scientific modeling.
+    exclude_when: []
+    notes: ""
+    sources: {include: [], exclude: []}
+  - id: single_cell_genomics
+    name: Single-cell genomics
+    category: computational_biology
+    subcategory: genomics
+    priority: medium
+    search_terms: ["single-cell genomics"]
+    synonyms: ["single-cell RNA-seq", "scRNA-seq"]
+    include_when:
+      - The work uses computational methods for single-cell genomics.
+    exclude_when: []
+    notes: ""
+    sources: {include: [], exclude: []}
+
+watchlist:
+  - id: example_author
+    name: Example Author
+    type: author
+    affiliation: Example University
+    orcid: ""
+    profile_urls: []
+    source_ids: {}
+    aliases: []
+    related_topics: [self_supervised_learning]
+    priority: medium
+    notes: Replace this item with authors or PIs you want to track.
+
+sources:
+  - id: openalex
+    name: OpenAlex
+    enabled: true
+    api_url: https://api.openalex.org/works
+    priority: high
+    date_field_policy: publication_date
+    max_results_per_query: 10
+    auth:
+      mode: optional
+      api_key_env: OPENALEX_API_KEY
+      placement: query
+      parameter: api_key
+      fallback_to_unauthenticated: true
+    notes: Broad scholarly metadata.
+  - id: europe_pmc
+    name: Europe PMC
+    enabled: true
+    api_url: https://www.ebi.ac.uk/europepmc/webservices/rest/search
+    priority: high
+    date_field_policy: first_publication_date
+    max_results_per_query: 10
+    notes: Biology and biomedical literature metadata and abstracts.
+  - id: biorxiv
+    name: bioRxiv
+    enabled: true
+    api_url: https://api.biorxiv.org/details/biorxiv
+    priority: medium
+    date_field_policy: posting_date
+    max_results_per_query: 10
+    notes: Biology preprints.
+  - id: medrxiv
+    name: medRxiv
+    enabled: true
+    api_url: https://api.biorxiv.org/details/medrxiv
+    priority: medium
+    date_field_policy: posting_date
+    max_results_per_query: 10
+    notes: Medical preprints.
+  - id: arxiv
+    name: arXiv
+    enabled: true
+    api_url: https://export.arxiv.org/api/query
+    priority: medium
+    date_field_policy: submitted_date
+    max_results_per_query: 10
+    notes: Physics, mathematics, computer science, and quantitative biology preprints.
+
+relevance_rules:
+  labels:
+    high: Flagged by both watched author and registry topic.
+    medium: Flagged by watched author only.
+    low: Flagged by registry topic only.
+
+change_log:
+  - date: "2026-09-02"
+    change: Created public example registry.
+    reason: Provide a reusable template without personal search preferences.
