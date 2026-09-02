@@ -47,6 +47,13 @@ def run(
             help="Write a report without advancing the stored last-run date.",
         ),
     ] = False,
+    author_only: Annotated[
+        bool,
+        typer.Option(
+            "--author-only",
+            help="Search watched authors only; skip registry topic searches.",
+        ),
+    ] = False,
     registry_path: Annotated[
         Path, typer.Option("--registry", help="Path to registry.yaml.")
     ] = Path("registry.yaml"),
@@ -74,6 +81,7 @@ def run(
             reports_dir=reports_dir,
             overwrite=overwrite,
             update_last_run=not no_date_update,
+            author_only=author_only,
         )
     except RunSkippedError as exc:
         typer.echo(str(exc))
@@ -91,6 +99,13 @@ def scheduled_run(
         bool,
         typer.Option(
             "--overwrite", help="Replace an existing report for the date window."
+        ),
+    ] = False,
+    author_only: Annotated[
+        bool,
+        typer.Option(
+            "--author-only",
+            help="Search watched authors only; skip registry topic searches.",
         ),
     ] = False,
     registry_path: Annotated[
@@ -113,7 +128,12 @@ def scheduled_run(
     try:
         window = default_window(state.get_last_run_date(now), now=now)
         report_path = run_review(
-            registry, window, state, reports_dir=reports_dir, overwrite=overwrite
+            registry,
+            window,
+            state,
+            reports_dir=reports_dir,
+            overwrite=overwrite,
+            author_only=author_only,
         )
     except RunSkippedError as exc:
         typer.echo(str(exc))
@@ -130,11 +150,18 @@ def test(
     registry_path: Annotated[
         Path, typer.Option("--registry", help="Path to registry.yaml.")
     ] = Path("registry.yaml"),
+    author_only: Annotated[
+        bool,
+        typer.Option(
+            "--author-only",
+            help="Search watched authors only; skip registry topic searches.",
+        ),
+    ] = False,
 ) -> None:
     load_local_env()
     registry = _load_or_exit(registry_path)
     window = default_window(initial_last_run_date(), now=None)
-    matched, diagnostics = collect_records(registry, window)
+    matched, diagnostics = collect_records(registry, window, author_only=author_only)
     typer.echo(render_report(registry, window, matched, diagnostics))
 
 

@@ -48,6 +48,7 @@ def run_review(
     overwrite: bool = False,
     update_last_run: bool = True,
     client: httpx.Client | None = None,
+    author_only: bool = False,
 ) -> Path:
     existing = state.successful_run_for_window(window)
     report_path = reports_dir / f"{window.end.isoformat()}.md"
@@ -60,7 +61,9 @@ def run_review(
             existing["report_path"],
         )
 
-    matched, diagnostics = collect_records(registry, window, client=client)
+    matched, diagnostics = collect_records(
+        registry, window, client=client, author_only=author_only
+    )
     deduped = dedupe_papers(matched)
     _update_included_counts(diagnostics, deduped)
     content = render_report(registry, window, deduped, diagnostics)
@@ -77,6 +80,7 @@ def collect_records(
     registry: Registry,
     window: DateWindow,
     client: httpx.Client | None = None,
+    author_only: bool = False,
 ) -> tuple[list[MatchedPaper], list[SourceDiagnostic]]:
     matched_by_identity: dict[tuple[str, str], dict[str, object]] = {}
     diagnostics: list[SourceDiagnostic] = []
@@ -92,27 +96,31 @@ def collect_records(
         errors: list[str] = []
         retained_by_source = 0
         try:
-            for topic in registry.topics:
-                if not _topic_uses_source(topic, source_config.id):
-                    continue
-                query = _topic_query(topic)
-                if not query:
-                    continue
-                try:
-                    records = adapter.search(
-                        query, window, max_results=source_config.max_results_per_query
-                    )
-                    returned_count += len(records)
-                    for record in records:
-                        retained_by_source += 1
-                        entry = _entry_for_record(matched_by_identity, record)
-                        entry["topics"].add(topic.id)  # type: ignore[union-attr]
-                except Exception as exc:
-                    _append_error(
-                        errors, f"topic {topic.id} / {query}: {_format_exception(exc)}"
-                    )
-                    if _is_rate_limit(exc):
-                        raise SourceRateLimitedError from exc
+            if not author_only:
+                for topic in registry.topics:
+                    if not _topic_uses_source(topic, source_config.id):
+                        continue
+                    query = _topic_query(topic)
+                    if not query:
+                        continue
+                    try:
+                        records = adapter.search(
+                            query,
+                            window,
+                            max_results=source_config.max_results_per_query,
+                        )
+                        returned_count += len(records)
+                        for record in records:
+                            retained_by_source += 1
+                            entry = _entry_for_record(matched_by_identity, record)
+                            entry["topics"].add(topic.id)  # type: ignore[union-attr]
+                    except Exception as exc:
+                        _append_error(
+                            errors,
+                            f"topic {topic.id} / {query}: {_format_exception(exc)}",
+                        )
+                        if _is_rate_limit(exc):
+                            raise SourceRateLimitedError from exc
 
             for item in registry.watchlist:
                 for name in [item.name, *item.aliases]:

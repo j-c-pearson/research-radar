@@ -15,9 +15,12 @@ uv run litreview validate-registry
 uv run litreview run
 uv run litreview run --from 2026-08-24 --to 2026-08-31
 uv run litreview run --from 2026-08-24 --to 2026-08-31 --overwrite
+uv run litreview run --author-only
 uv run litreview run --no-date-update
 uv run litreview scheduled-run
+uv run litreview scheduled-run --author-only
 uv run litreview test
+uv run litreview test --author-only
 uv run litreview render-registry
 uv run litreview install-launchd --dry-run
 uv run pytest
