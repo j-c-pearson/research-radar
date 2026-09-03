@@ -20,7 +20,7 @@ def test_initial_last_run_is_seven_days_before(tmp_path: Path) -> None:
 
 
 def test_duplicate_window_skip_and_overwrite(tmp_path: Path) -> None:
-    registry = load_registry(Path("registry.yaml"))
+    registry = load_registry(Path("registry.example.yaml"))
     for source in registry.sources:
         source.enabled = False
     state = StateStore(tmp_path / "state.sqlite")

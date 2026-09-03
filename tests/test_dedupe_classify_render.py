@@ -34,13 +34,13 @@ def test_clean_title_exact_policy() -> None:
 
 
 def test_dedupe_by_doi_preprint_and_cleaned_title() -> None:
-    registry = load_registry(Path("registry.yaml"))
-    p1 = classify_record(record("Title A", doi="10.1234/X"), registry, {"synthetic_biology"}, set())
-    p2 = classify_record(record("Title B", doi="https://doi.org/10.1234/x"), registry, {"synthetic_biology"}, set())
-    p3 = classify_record(record("Different", preprint_id="abc"), registry, {"synthetic_biology"}, set())
-    p4 = classify_record(record("Another", preprint_id="ABC"), registry, {"synthetic_biology"}, set())
-    p5 = classify_record(record("Same Title."), registry, {"synthetic_biology"}, set())
-    p6 = classify_record(record("same   title"), registry, {"synthetic_biology"}, set())
+    registry = load_registry(Path("registry.example.yaml"))
+    p1 = classify_record(record("Title A", doi="10.1234/X"), registry, {"self_supervised_learning"}, set())
+    p2 = classify_record(record("Title B", doi="https://doi.org/10.1234/x"), registry, {"self_supervised_learning"}, set())
+    p3 = classify_record(record("Different", preprint_id="abc"), registry, {"self_supervised_learning"}, set())
+    p4 = classify_record(record("Another", preprint_id="ABC"), registry, {"self_supervised_learning"}, set())
+    p5 = classify_record(record("Same Title."), registry, {"self_supervised_learning"}, set())
+    p6 = classify_record(record("same   title"), registry, {"self_supervised_learning"}, set())
 
     deduped = dedupe_papers([p for p in [p1, p2, p3, p4, p5, p6] if p])
 
@@ -48,11 +48,11 @@ def test_dedupe_by_doi_preprint_and_cleaned_title() -> None:
 
 
 def test_relevance_labels() -> None:
-    registry = load_registry(Path("registry.yaml"))
+    registry = load_registry(Path("registry.example.yaml"))
 
-    low = classify_record(record("Topic"), registry, {"synthetic_biology"}, set())
-    medium = classify_record(record("Author", authors=["Michael Elowitz"]), registry, set(), {"michael_elowitz"})
-    high = classify_record(record("Both", authors=["Michael Elowitz"]), registry, {"synthetic_biology"}, {"michael_elowitz"})
+    low = classify_record(record("Topic"), registry, {"self_supervised_learning"}, set())
+    medium = classify_record(record("Author", authors=["Example Author"]), registry, set(), {"example_author"})
+    high = classify_record(record("Both", authors=["Example Author"]), registry, {"self_supervised_learning"}, {"example_author"})
 
     assert low and low.match.relevance_label == "low"
     assert medium and medium.match.relevance_label == "medium"
@@ -60,11 +60,11 @@ def test_relevance_labels() -> None:
 
 
 def test_report_doi_abstract_and_no_summary() -> None:
-    registry = load_registry(Path("registry.yaml"))
+    registry = load_registry(Path("registry.example.yaml"))
     paper = classify_record(
         record("Report Item", doi="10.1234/example", authors=["Ada Lovelace", "Grace Hopper"]),
         registry,
-        {"synthetic_biology"},
+        {"self_supervised_learning"},
         set(),
     )
     assert paper
@@ -76,7 +76,7 @@ def test_report_doi_abstract_and_no_summary() -> None:
     )
 
     assert "## Low relevance" in content
-    assert "### Engineering biology" in content
+    assert "### Machine learning" in content
     assert "[10.1234/example](https://doi.org/10.1234/example)" in content
     assert "- Authors: Ada Lovelace, Grace Hopper" in content
     assert "- Published/available online: 2026-08-31" in content
@@ -90,8 +90,8 @@ def test_report_doi_abstract_and_no_summary() -> None:
 
 
 def test_report_omits_missing_abstract() -> None:
-    registry = load_registry(Path("registry.yaml"))
-    paper = classify_record(record("No Abstract"), registry, {"synthetic_biology"}, set())
+    registry = load_registry(Path("registry.example.yaml"))
+    paper = classify_record(record("No Abstract"), registry, {"self_supervised_learning"}, set())
     assert paper
     paper.record.abstract = ""
 
@@ -106,10 +106,10 @@ def test_report_omits_missing_abstract() -> None:
 
 
 def test_report_groups_by_relevance_then_category() -> None:
-    registry = load_registry(Path("registry.yaml"))
-    low = classify_record(record("Low"), registry, {"synthetic_biology"}, set())
-    high = classify_record(record("High", authors=["Michael Elowitz"]), registry, {"synthetic_biology"}, {"michael_elowitz"})
-    medium = classify_record(record("Medium", authors=["Michael Elowitz"]), registry, set(), {"michael_elowitz"})
+    registry = load_registry(Path("registry.example.yaml"))
+    low = classify_record(record("Low"), registry, {"self_supervised_learning"}, set())
+    high = classify_record(record("High", authors=["Example Author"]), registry, {"self_supervised_learning"}, {"example_author"})
+    medium = classify_record(record("Medium", authors=["Example Author"]), registry, set(), {"example_author"})
     assert low and medium and high
 
     content = render_report(

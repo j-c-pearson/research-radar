@@ -73,6 +73,17 @@ watchlist:
     related_topics: [self_supervised_learning]
     priority: medium
     notes: Replace this item with authors or PIs you want to track.
+  - id: example_lab
+    name: Example Research Lab
+    type: lab
+    affiliation: Example University
+    orcid: ""
+    profile_urls: []
+    source_ids: {}
+    aliases: [Example Lab]
+    related_topics: [neural_operators, single_cell_genomics]
+    priority: low
+    notes: Example of a lab-level watch item with more than one related topic.
 
 sources:
   - id: openalex

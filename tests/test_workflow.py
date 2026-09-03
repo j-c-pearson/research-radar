@@ -44,7 +44,7 @@ class FakeAuthorAdapter(SourceAdapter):
 
 
 def test_author_only_skips_topic_searches(monkeypatch) -> None:
-    registry = load_registry(Path("registry.yaml"))
+    registry = load_registry(Path("registry.example.yaml"))
     registry.sources = [source for source in registry.sources if source.id == "openalex"]
     FakeAuthorAdapter.topic_queries = 0
     FakeAuthorAdapter.author_queries = 0
