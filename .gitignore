@@ -1,6 +1,9 @@
 #######################################
 # Custom GITIGNORE
 #######################################
+# Personal runtime configuration
+registry.yaml
+
 # Mac Finder files
 .DS_Store
 
